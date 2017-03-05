@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 					{
 						if (last_decimal <= 11)
 						{
-							last_number += decimal_unit[temp - '0'];
+							last_number += decimal_unit[last_decimal + 1] * (temp - '0');
 							last_decimal++;
 						}
 					}
