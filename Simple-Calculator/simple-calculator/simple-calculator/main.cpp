@@ -9,12 +9,13 @@ int main(int argc, char* argv[])
 	AbstractSyntaxTreeNode<double>* temp;
 	string str;
 	while (true)
-	{
-		
+	{	
 	
-		cin >> str;
+		getline(cin, str);
 
-		build(temp, str, 0, str.length());
+		syntax_analysis_pretreatment(str);
+		auto temp1 = convert_to_syntax_element_sequence<double>(str);
+		build(temp, temp1, 0, temp1.size());
 
 		cout << temp->get_value() << endl;
 	
