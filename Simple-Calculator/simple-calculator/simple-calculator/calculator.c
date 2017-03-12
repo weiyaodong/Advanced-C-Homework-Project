@@ -39,7 +39,7 @@ double power(double x, double y)
 	return pow(x, y);
 }
 
-int main(int argc, char* argv[])
+void work()
 {
 	while (1)
 	{
