@@ -23,6 +23,7 @@ enum Node_Type
 	LEFT_BRACKET,
 	RIGHT_BRACKET,
 	DOT,
+	LETTER,
 	NONE,
 };
 
@@ -50,7 +51,12 @@ inline Node_Type type_mapping(char c)
 	case '8':
 	case '9':return NUMBER;
 	case '.':return DOT;
-	default:return NONE;
+	default:
+		if (c >= 'a' && c <= 'z' || c>='A' && c<='Z')
+		{
+			return LETTER;
+		}
+		return NONE;
 	}
 }
 
@@ -69,6 +75,10 @@ inline int priority(Node_Type type)
 		return 3;
 	case POWER:
 		return 4;
+	case SIN:
+	case COS:
+	case TAN:
+		return 5;
 	default:
 		return 10000;
 	}
@@ -95,9 +105,27 @@ public:
 	// ReSharper disable once CppNonExplicitConvertingConstructor
 	SyntaxElement(std::string str)
 	{
-		std::istringstream ss(str);
-		ss >> data;
-		type = NUMBER;
+		if (str == "sin")
+		{
+			type = SIN;
+			data = 0;
+		}
+		else if (str == "cos")
+		{
+			type = COS;
+			data = 0;
+		}
+		else if (str == "tan")
+		{
+			type = TAN;
+			data = 0;
+		}
+		else
+		{
+			std::istringstream ss(str);
+			ss >> data;
+			type = NUMBER;
+		}
 	}
 
 	bool operator == (char ch) const
@@ -135,6 +163,27 @@ std::vector<SyntaxElement<data_type>> convert_to_syntax_element_sequence(const s
 
 	for (int i = 0; i < str.length(); ++i)
 	{
+		if (str.length() - i > 3)
+		{
+			if (str.substr(i, 3) == "sin")
+			{
+				i += 2;
+				result.push_back(SyntaxElement<data_type>("sin"));
+				continue;
+			}
+			if (str.substr(i, 3) == "cos")
+			{
+				i += 2;
+				result.push_back(SyntaxElement<data_type>("cos"));
+				continue;
+			}
+			if (str.substr(i, 3) == "tan")
+			{
+				i += 2;
+				result.push_back(SyntaxElement<data_type>("tan"));
+				continue;
+			}
+		}
 		if (type_mapping(str[i]) == NUMBER || type_mapping(str[i]) == DOT)
 		{
 			int dot_counter = 1;
@@ -296,7 +345,7 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 			continue;
 		}
 		Node_Type type = vec[i].type;
-		if (priority(type) < min_pri)
+		if (priority(type) <= min_pri)
 		{
 			min_pri = priority(type);
 			pos = i;
@@ -326,6 +375,31 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 			build(current_node->child2, vec, pos + 1, pos2);
 			build(current_node->child3, vec, pos2 + 1, end);
 			
+		}
+		else if (vec[pos].type == SIN || vec[pos].type == COS || vec[pos].type == TAN)
+		{
+			current_node->type = vec[pos].type;
+			if (vec[pos + 1].type == LEFT_BRACKET)
+			{
+				int counter = 1;
+				int j;
+				for (j = pos + 2; j < vec.size() && counter; ++j)
+				{
+					if (vec[j] == LEFT_BRACKET)
+					{
+						counter++;
+					}
+					if (vec[j] == RIGHT_BRACKET)
+					{
+						counter--;
+					}
+				}
+				build(current_node->child1, vec, pos + 2, end - 1);
+			}
+			else
+			{
+				build(current_node->child1, vec, begin + 1, end);
+			}
 		}
 		else
 		{
