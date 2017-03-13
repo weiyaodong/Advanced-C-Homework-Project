@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 		build(temp, temp1, 0, temp1.size());
 
 		cout << temp->get_value() << endl;
-	
+		print_structure(temp->child1, "");
 	}
 	return 0;
 }

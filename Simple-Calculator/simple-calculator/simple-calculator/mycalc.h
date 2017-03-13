@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 #include <cmath>
 #include <vector>
 #include <sstream>
@@ -26,6 +25,25 @@ enum Node_Type
 	LETTER,
 	NONE,
 };
+
+const std::string PREFIX_BRANCH_START = "+";//'©Ð';
+const std::string PREFIX_BRANCH_MID	= "+";//'©À';
+const std::string PREFIX_BRANCH_FILL = "|";//'©¦';
+const std::string PREFIX_BRANCH_END	= "+";//'©¸';
+const std::string PREFIX_LEAF = "-";//'©¤';
+const std::string PREFIX_BLANK = " ";
+
+const char temp = '©Ð';
+
+inline std::string blank_str(size_t len)
+{
+	std::string temp;
+	for (size_t i = 0; i < len; ++i)
+	{
+		temp += " ";
+	}
+	return temp;
+}
 
 inline Node_Type type_mapping(char c)
 {
@@ -276,6 +294,58 @@ public:
 		}
 	}
 
+	size_t degree() const
+	{
+		switch (type)
+		{
+		case NUMBER:
+			return 0;
+		case PLUS:
+		case MINUS:
+		case MULTIPLY:
+		case DIVIDE:
+		case POWER:
+			return 2;
+		case SIN:
+		case COS:
+		case TAN:
+			return 1;
+		case IF:
+			return 3;
+		default:
+			return 0;
+		}
+	}
+
+	std::string transfer_to_string() const
+	{
+		std::stringstream ss;
+		switch (type)
+		{
+		case NUMBER:
+			ss << data;
+			return ss.str();
+		case PLUS:
+			return "add";
+		case MINUS:
+			return "sub";
+		case MULTIPLY:
+			return "mul";
+		case DIVIDE:
+			return "div";
+		case POWER:
+			return "pow";
+		case SIN:
+			return "sin";
+		case COS:
+			return "cos";
+		case TAN:
+			return "tan";
+		default:
+			return "";
+		}
+	}
+	
 	Node_Type type;
 
 	ast_pointer child1;
@@ -337,6 +407,10 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 			{
 				build(current_node, vec, begin + 1, end - 1);
 				return;
+			}
+			if (j == end)
+			{
+				continue;
 			}
 			i = j;
 		}
@@ -414,9 +488,81 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 		if (vec[begin] == LEFT_BRACKET && vec[end - 1] == RIGHT_BRACKET)
 		{
 			begin++;
-			end--;
 		}
 		current_node->type = NUMBER;
 		current_node->data = vec[begin].data;
+	}
+}
+
+
+void print_prefix(std::string prefix)
+{
+	if (!prefix.empty())
+	{
+		for (size_t i = 0; i < prefix.length(); ++i)
+		{
+			if (prefix[i] == PREFIX_BRANCH_START[0] 
+				|| prefix[i] == PREFIX_BRANCH_MID[0] 
+				|| prefix[i] == PREFIX_BRANCH_FILL[0])
+			{
+				prefix[i] = PREFIX_BRANCH_FILL[0];
+			}
+			else
+			{
+				prefix[i] = ' ';
+			}
+		}
+	}
+	std::cout << prefix.substr(0, prefix.length() - 1);
+}
+
+template<typename data_type>
+void print_structure(AbstractSyntaxTreeNode<data_type>* current_node, std::string prefix)
+{
+	std::string temp_prefix;
+	switch (current_node->degree())
+	{
+	case 0:
+		std::cout << PREFIX_LEAF << "(" << current_node->transfer_to_string() << ")" << std::endl;
+		return;
+	case 1:
+		std::cout << PREFIX_LEAF << current_node->transfer_to_string() << PREFIX_LEAF;
+
+		prefix += (PREFIX_LEAF);
+		prefix += current_node->transfer_to_string() + PREFIX_LEAF;
+
+		print_structure(current_node->child1, prefix);
+		return;
+	case 2:
+		std::cout << PREFIX_LEAF << current_node->transfer_to_string() << PREFIX_BRANCH_START;
+
+		temp_prefix = prefix + PREFIX_LEAF + current_node->transfer_to_string() + PREFIX_BRANCH_START;
+
+		print_structure(current_node->child1, temp_prefix);
+
+		print_prefix(temp_prefix);
+
+		std::cout << PREFIX_BRANCH_END;
+		print_structure(current_node->child2, prefix + blank_str(5));
+		return;
+	case 3:
+		std::cout << PREFIX_LEAF << current_node->transfer_to_string() << PREFIX_BRANCH_START;
+
+		temp_prefix = prefix + PREFIX_LEAF + current_node->transfer_to_string() + PREFIX_BRANCH_START;
+				
+		print_structure(current_node->child1, temp_prefix);
+
+		print_prefix(temp_prefix);
+		std::cout << PREFIX_BRANCH_MID;
+
+		print_structure(current_node->child2, temp_prefix);
+
+		print_prefix(temp_prefix);
+		std::cout << PREFIX_BRANCH_END;
+
+		print_structure(current_node->child3, prefix + blank_str(5));
+		return;
+	default:
+		std::cerr << "what the fuck ?!!" << std::endl;
 	}
 }
