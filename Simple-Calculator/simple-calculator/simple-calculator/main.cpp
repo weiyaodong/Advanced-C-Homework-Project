@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 	string str;
 	while (true)
 	{	
-	
 		getline(cin, str);
 
 		cout << get_value<double>(str) << endl;

@@ -83,8 +83,9 @@ inline int priority(Node_Type type)
 	switch (type)
 	{
 	case IF:
-	case IF_2:
 		return 1;
+	case IF_2:
+		return 100;
 	case PLUS:
 	case MINUS:
 		return 2;
@@ -326,21 +327,23 @@ public:
 			ss << data;
 			return ss.str();
 		case PLUS:
-			return "add";
+			return "ADD";
 		case MINUS:
-			return "sub";
+			return "SUB";
 		case MULTIPLY:
-			return "mul";
+			return "MUL";
 		case DIVIDE:
-			return "div";
+			return "DIV";
 		case POWER:
-			return "pow";
+			return "POW";
 		case SIN:
-			return "sin";
+			return "SIN";
 		case COS:
-			return "cos";
+			return "COS";
 		case TAN:
-			return "tan";
+			return "TAN";
+		case IF:
+			return "IF";
 		default:
 			return "";
 		}
