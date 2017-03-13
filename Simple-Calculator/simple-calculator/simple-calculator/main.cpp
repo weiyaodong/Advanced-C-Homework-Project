@@ -13,12 +13,8 @@ int main(int argc, char* argv[])
 	
 		getline(cin, str);
 
-		syntax_analysis_pretreatment(str);
-		auto temp1 = convert_to_syntax_element_sequence<double>(str);
-		build(temp, temp1, 0, temp1.size());
-
-		cout << temp->get_value() << endl;
-		print_structure(temp->child1, "");
+		cout << get_value<double>(str) << endl;
+		print_structure<double>(str);
 	}
 	return 0;
 }

@@ -410,7 +410,7 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 			}
 			if (j == end)
 			{
-				continue;
+				break;
 			}
 			i = j;
 		}
@@ -495,7 +495,7 @@ void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<S
 }
 
 
-void print_prefix(std::string prefix)
+inline void print_prefix(std::string prefix)
 {
 	if (!prefix.empty())
 	{
@@ -565,4 +565,24 @@ void print_structure(AbstractSyntaxTreeNode<data_type>* current_node, std::strin
 	default:
 		std::cerr << "what the fuck ?!!" << std::endl;
 	}
+}
+
+template<typename data_type>
+data_type get_value(const std::string& str)
+{
+	std::string temp_str = std::string("(") + str + ")";
+	auto temp = convert_to_syntax_element_sequence<data_type>(temp_str);
+	AbstractSyntaxTreeNode<data_type>* temp2;
+	build<data_type>(temp2, temp, 0, temp.size());
+	return temp2->get_value();
+}
+
+template<typename data_type>
+void print_structure(const std::string& str)
+{
+	std::string temp_str = std::string("(") + str + ")";
+	auto temp = convert_to_syntax_element_sequence<data_type>(temp_str);
+	AbstractSyntaxTreeNode<data_type>* temp2;
+	build<data_type>(temp2, temp, 0, temp.size());
+	print_structure(temp2, "");
 }
