@@ -299,6 +299,4 @@ void work()
 			printf("%.6lf\n", data_stack[stack_top--]);
 		}
 	}
-
-	return 0;
 }

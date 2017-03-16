@@ -176,7 +176,8 @@ inline void syntax_analysis_pretreatment(std::string& str)
 }
 
 template<typename data_type>
-std::vector<SyntaxElement<data_type>> convert_to_syntax_element_sequence(const std::string& str)
+std::vector<SyntaxElement<data_type>> 
+	convert_to_syntax_element_sequence(const std::string& str)
 {
 	std::vector<SyntaxElement<data_type>> result;
 
@@ -251,7 +252,11 @@ public:
 	}
 
 	AbstractSyntaxTreeNode(const AbstractSyntaxTreeNode& ast_node):
-		type(ast_node.type), child1(ast_node.child1), child2(ast_node.child2), child3(ast_node.child3), data(ast_node.data)
+		type(ast_node.type), 
+		child1(ast_node.child1), 
+		child2(ast_node.child2), 
+		child3(ast_node.child3), 
+		data(ast_node.data)
 	{
 	}
 
@@ -367,22 +372,26 @@ void clear(AbstractSyntaxTreeNode<data_type>* ast_node)
 	{
 		clear(ast_node->child1);
 		delete ast_node->child1;
+		ast_node->child1 = nullptr;
 	}
 	if (ast_node->child2 != nullptr)
 	{
 		clear(ast_node->child2);
-		delete ast_node->child1;
+		delete ast_node->child2;
+		ast_node->child2 = nullptr;
+
 	}
 	if (ast_node->child3 != nullptr)
 	{
-		clear(ast_node->child4);
-		delete ast_node->child1;
+		clear(ast_node->child3);
+		delete ast_node->child3;
 	}
 }
 
 
 template<typename data_type>
-void build(AbstractSyntaxTreeNode<data_type>*& current_node, const std::vector<SyntaxElement<data_type>>& vec, int begin, int end)
+void build(AbstractSyntaxTreeNode<data_type>*& current_node, 
+	const std::vector<SyntaxElement<data_type>>& vec, int begin, int end)
 {
 	current_node = new AbstractSyntaxTreeNode<data_type>;
 	
@@ -520,7 +529,8 @@ inline void print_prefix(std::string prefix)
 }
 
 template<typename data_type>
-void print_structure(AbstractSyntaxTreeNode<data_type>* current_node, std::string prefix)
+void print_structure(AbstractSyntaxTreeNode<data_type>* current_node, 
+	std::string prefix)
 {
 	std::string temp_prefix;
 	switch (current_node->degree())
