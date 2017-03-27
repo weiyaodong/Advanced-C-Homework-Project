@@ -52,12 +52,24 @@ enum Node_Type
 	KEYWORD_PRINT,
 	KEYWORD_READ,
 	KEYWORD_VAR,
+	IF,
+	WHILE,
+	FOR,
+	RETURN,
+	BREAK,
+	CONTINUE,
+	DEFINE,
+	PRINT,
+	READ,
+	VAR,
 	IDENTIFIER,
 	STRING,
 	FUNCTION,
 	VARIABLE,
 	LIST,
 	BLOCK,
+	RUNTIME_PARAMETERS,
+	DEF_PARAMETERS,
 	STATEMENT,
 	EXPRESSION,
 	UNDEFINED,
@@ -284,6 +296,34 @@ int operator_priority(Node_Type oper)
 	}
 }
 
+int operator_num(Node_Type oper)
+{
+	switch (oper)
+	{
+	case OPER_LOGICAL_NOT:
+		return 1;
+	case OPER_MUL:
+	case OPER_DIV:
+	case OPER_MOD:
+	case OPER_ADD:
+	case OPER_SUB:
+	case OPER_GREATER:
+	case OPER_GREATEREQ:
+	case OPER_LESS:
+	case OPER_LESSEQ:
+	case OPER_EQUAL:
+	case OPER_BITWISE_AND:
+	case OPER_BITWISE_XOR:
+	case OPER_BITWISE_OR:
+	case OPER_LOGICAL_AND:
+	case OPER_LOGICAL_OR:
+	case OPER_ASSIGN:
+		return 2;
+	default:
+		return -1;
+	}
+}
+
 bool is_left_associative(Node_Type oper)
 {
 	if (oper == OPER_ASSIGN)
@@ -479,6 +519,8 @@ public:
 	{
 	}
 
+	explicit Scope(Scope* parent): parent(parent){}
+
 	Object find_in_scope(const String& identifier_name)
 	{
 		if (identifiers.find(identifier_name) != identifiers.end())
@@ -574,7 +616,9 @@ void SyntaxAnalysis(AbstractSyntaxTreeNode*& current,
 		{
 			if (token_list[i].type == SEMICOLON)
 			{
-				current->children.push_back(new AbstractSyntaxTreeNode);
+				AbstractSyntaxTreeNode* new_child = new AbstractSyntaxTreeNode;
+				new_child->scope = current->scope;
+				current->children.push_back(new_child);
 				SyntaxAnalysis(current->children[current->children.size() - 1], token_list, last, i - 1, STATEMENT);
 				last = i + 1;
 			}
@@ -599,7 +643,15 @@ void SyntaxAnalysis(AbstractSyntaxTreeNode*& current,
 					std::cerr << "I guess you miss some '{' or '}' here" << std::endl;
 					return;
 				}
+
+				AbstractSyntaxTreeNode* new_child = new AbstractSyntaxTreeNode;
+				new_child->scope = new Scope(current->scope);
+				current->children.push_back(new_child);
+				SyntaxAnalysis(current->children[current->children.size() - 1], token_list, i, j, BLOCK);
+
 				i = j - 1;
+				last = i + 1;
+
 			}
 		}
 	}
@@ -608,123 +660,199 @@ void SyntaxAnalysis(AbstractSyntaxTreeNode*& current,
 		if (token_list[start].type == KEYWORD_DEFINE)
 		{
 			current->type = KEYWORD_DEFINE;
+			AbstractSyntaxTreeNode* new_child1 = new AbstractSyntaxTreeNode;
+			new_child1->type = IDENTIFIER;
+			new_child1->scope = current->scope;
+			new_child1->name = token_list[start + 1].name;
+			current->children.push_back(new_child1);
+
+			if(finish - start == 2)
+			{
+				return;
+			}
+
+			AbstractSyntaxTreeNode* new_child2 = new AbstractSyntaxTreeNode;
+
+			if (token_list[start + 2].type == KEYWORD_FUNC)
+			{
+				new_child2->scope = current->scope;
+				current->children.push_back(new_child2);
+				SyntaxAnalysis(current->children[current->children.size() - 1], token_list, start + 3, finish, FUNCTION);
+			}
+			else
+			{
+				new_child2->scope = current->scope;
+				current->children.push_back(new_child2);
+				SyntaxAnalysis(current->children[current->children.size() - 1], token_list, start + 2, finish, EXPRESSION);
+			}
 		}
 		else if (token_list[start].type == KEYWORD_FOR)
 		{
-			current->type = KEYWORD_FOR;
+			current->type = FOR;
+			// to do
 		}
 		else if (token_list[start].type == KEYWORD_WHILE)
 		{
-			current->type = KEYWORD_WHILE;
+			current->type = WHILE;
+			
 		}
 		else if (token_list[start].type == KEYWORD_IF)
 		{
-			current->type = KEYWORD_IF;
+			current->type = IF;
 		}
 		else if (token_list[start].type == KEYWORD_VAR)
 		{
-			current->type = KEYWORD_VAR;
+			current->type = VAR;
 		}
 		else if (token_list[start].type == KEYWORD_BREAK)
 		{
-			current->type = KEYWORD_BREAK;
+			current->type = BREAK;
 		}
 		else if (token_list[start].type == KEYWORD_CONTINUE)
 		{
-			current->type = KEYWORD_CONTINUE;
+			current->type = CONTINUE;
 		}
 		else
 		{
-			finish -= 1;
-			int pos = start;
-			STD_Vector<AbstractSyntaxTreeNode*> vec;
-			STD_Stack<AbstractSyntaxTreeNode*> stk;
-			STD_Stack<Token> oper_stk;
+			SyntaxAnalysis(current, token_list, start, finish, EXPRESSION);
+		}
+	}
+	else if(type == FUNCTION)
+	{
+		
+	}
+	else if(type == RUNTIME_PARAMETERS)
+	{
+		current->type = RUNTIME_PARAMETERS;
+		int last = start;
+		for(int i = start ; i < finish ; i++)
+		{
+			if(token_list[i].type == COMMA)
+			{
+				AbstractSyntaxTreeNode* new_child = new AbstractSyntaxTreeNode;
+				new_child->scope = current->scope;
+				current->children.push_back(new_child);
+				SyntaxAnalysis(current->children[current->children.size() - 1], token_list, last, i - 1, EXPRESSION);
+			}
+		}
+		AbstractSyntaxTreeNode* new_child = new AbstractSyntaxTreeNode;
+		new_child->scope = current->scope;
+		current->children.push_back(new_child);
+		SyntaxAnalysis(current->children[current->children.size() - 1], token_list, last, finish - 1, EXPRESSION);
+	}
+	else if(type == EXPRESSION)
+	{
+		int pri = 1000000;
+		int pos = -1;
+		for (int i = start ; i < finish ;i++)
+		{
+			if(token_list[i].type == LEFT_PAR)
+			{
+				int counter = 1;
+				int j = i + 1;
+				while (j < finish && counter)
+				{
+					if(token_list[j].type == LEFT_PAR)
+					{
+						counter++;
+					}
+					if(token_list[i].type == RIGHT_PAR)
+					{
+						counter--;
+					}
+					j++;
+				}
+				if(j == finish)
+				{
+					if(i == start)
+					{
+						SyntaxAnalysis(current, token_list, start + 1, finish - 1, EXPRESSION);
+						return;
+					}
+					break;
+				}
+				i = j;
+			}
+			if(token_list[i].type == NUMBER || token_list[i].type == IDENTIFIER)
+			{
+				continue;
+			}
+			Node_Type cur_type = token_list[i].type;
+			if(is_left_associative(cur_type) && operator_priority(cur_type) <= pri 
+				|| !is_left_associative(cur_type) && operator_priority(cur_type) < pri)
+			{
+				pri = operator_priority(cur_type);
+				pos = i;
+			}
+		}
 
-			for (int i = start; i < finish; ++i)
+		if(pos != -1)
+		{
+			if(operator_num(token_list[pos].type) == 1)
 			{
-				if (token_list[i].type == NUMBER || token_list[i].type == IDENTIFIER)
-				{
-					AbstractSyntaxTreeNode* temp_node = new AbstractSyntaxTreeNode;
-					temp_node->type = token_list[i].type;
-					temp_node->data_value = token_list[i].data;
-					temp_node->name = token_list[i].name;
-					vec.push_back(temp_node);
-				}
-				else if (token_list[i].type == LEFT_PAR)
-				{
-					oper_stk.push(token_list[i]);
-				}
-				else if (token_list[i].type == RIGHT_PAR)
-				{
-					while (oper_stk.top().type != LEFT_PAR)
-					{
-						AbstractSyntaxTreeNode* temp_node = new AbstractSyntaxTreeNode;
-						temp_node->type = oper_stk.top().type;
-						vec.push_back(temp_node);
-						oper_stk.pop();
-					}
-				}
-				else
-				{
-					while (!oper_stk.empty() && 
-						(is_left_associative(oper_stk.top().type) 
-							&& (operator_priority(oper_stk.top().type) <= operator_priority(token_list[i].type))) &&
-						(!is_left_associative(oper_stk.top().type)
-							&& (operator_priority(oper_stk.top().type) < operator_priority(token_list[i].type))))
-					{
-						AbstractSyntaxTreeNode* temp_node = new AbstractSyntaxTreeNode;
-						temp_node->type = oper_stk.top().type;
-						vec.push_back(temp_node);
-						oper_stk.pop();
-					}
-					oper_stk.push(token_list[i]);
-				}
+				current->type = token_list[pos].type;
+				AbstractSyntaxTreeNode* lc = new AbstractSyntaxTreeNode;
+				lc->scope = current->scope;
+				current->children.push_back(lc);
+				SyntaxAnalysis(current->children[0], token_list, start, pos, EXPRESSION);
 			}
-			while (!oper_stk.empty())
+			else if(operator_num(token_list[pos].type) == 2)
 			{
-				AbstractSyntaxTreeNode* temp_node = new AbstractSyntaxTreeNode;
-				temp_node->type = oper_stk.top().type;
-				vec.push_back(temp_node);
-				oper_stk.pop();
+				current->type = token_list[pos].type;
+				AbstractSyntaxTreeNode* lc = new AbstractSyntaxTreeNode;
+				AbstractSyntaxTreeNode* rc = new AbstractSyntaxTreeNode;
+				lc->scope = current->scope;
+				rc->scope = current->scope;
+				current->children.push_back(lc);
+				current->children.push_back(rc);
+				SyntaxAnalysis(current->children[0], token_list, start, pos, EXPRESSION);
+				SyntaxAnalysis(current->children[1], token_list, pos + 1, finish, EXPRESSION);
 			}
-			for (int i = 0; i < vec.size(); ++i)
+		}
+		else
+		{
+			if(finish - start == 1)
 			{
-				if (vec[i]->type == NUMBER || vec[i]->type == IDENTIFIER)
-				{
-					stk.push(vec[i]);
-				}
-				else
-				{
-					// to do
-				}
+				current->type = token_list[start].type;
+				current->data_value = token_list[start].data;
+				current->name = token_list[start].name;
+			}
+			else if(token_list[start].type == IDENTIFIER 
+				&& token_list[start + 1].type == LEFT_PAR 
+				&& token_list[finish - 1].type == RIGHT_PAR)
+			{
+				current->type = FUNCTION;
+				AbstractSyntaxTreeNode* new_child = new AbstractSyntaxTreeNode;
+				new_child->scope = current->scope;
+				current->children.push_back(new_child);
+				SyntaxAnalysis(current->children[0], token_list, start + 2, finish - 1, RUNTIME_PARAMETERS);
 			}
 		}
 	}
-	else if (type == EXPRESSION)
-	{
-		
-	}
-	else if (type == KEYWORD_FUNC)
-	{
-		
-	}
-	else if (type == KEYWORD_DEFINE)
-	{
-		
-	}
-	else if (type == KEYWORD_VAR)
-	{
-		
-	}
-	else if (type == KEYWORD_PRINT)
-	{
-		
-	}
-	else if (type == KEYWORD_READ)
-	{
-		
-	}
+//	else if (type == EXPRESSION)
+//	{
+//		
+//	}
+//	else if (type == KEYWORD_FUNC)
+//	{
+//		
+//	}
+//	else if (type == KEYWORD_DEFINE)
+//	{
+//		
+//	}
+//	else if (type == KEYWORD_VAR)
+//	{
+//		
+//	}
+//	else if (type == KEYWORD_PRINT)
+//	{
+//		
+//	}
+//	else if (type == KEYWORD_READ)
+//	{
+//		
+//	}
 }
 
 void interactive_interface()
