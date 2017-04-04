@@ -237,6 +237,13 @@ void work()
 								data_stack[++stack_top] = temp_num - another_num;
 								stack[stack_top] = NUMBER;
 							}
+							else
+							{
+								data_stack[++stack_top] = another_num;
+								stack[++stack_top] = oper;
+								data_stack[++stack_top] = temp_num;
+								break;
+							}
 						}
 						stack[++stack_top] = (temp == '+') ? PLUS : MINUS;
 					}
@@ -268,6 +275,13 @@ void work()
 								data_stack[++stack_top] = temp_num / another_num;
 								stack[stack_top] = NUMBER;
 							}
+							else
+							{
+								data_stack[++stack_top] = another_num;
+								stack[++stack_top] = oper;
+								data_stack[++stack_top] = temp_num;
+								break;
+							}
 						}
 						stack[++stack_top] = (temp == '*') ? MULTIPLY : DIVIDE;
 					}
@@ -282,6 +296,13 @@ void work()
 							{
 								data_stack[++stack_top] = power(another_num, temp_num);
 								stack[stack_top] = NUMBER;
+							}
+							else
+							{
+								data_stack[++stack_top] = another_num;
+								stack[++stack_top] = oper;
+								data_stack[++stack_top] = temp_num;
+								break;
 							}
 						}
 						stack[++stack_top] = POWER;
@@ -299,4 +320,13 @@ void work()
 			printf("%.6lf\n", data_stack[stack_top--]);
 		}
 	}
+}
+
+int main(int argc, char* argv[])
+{
+	while (true)
+	{
+		work();
+	}
+	return 0;
 }
