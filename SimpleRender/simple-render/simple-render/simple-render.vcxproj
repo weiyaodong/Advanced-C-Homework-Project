@@ -20,10 +20,10 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{391E7EDD-11AC-40B1-B931-315E05EB0EDF}</ProjectGuid>
+    <ProjectGuid>{4987060C-1C63-4712-A221-D0EB73087D8A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>testforacllib</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <RootNamespace>simplerender</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -141,11 +141,9 @@
   <ItemGroup>
     <ClCompile Include="acllib.c" />
     <ClCompile Include="main.c" />
-    <ClCompile Include="源.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="acllib.h" />
-    <ClInclude Include="CString.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
